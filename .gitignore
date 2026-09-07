@@ -2,3 +2,7 @@
 __pycache__/
 *.pyc
 out/
+data/*
+!data/favorita/
+data/favorita/*
+!data/favorita/download.py
