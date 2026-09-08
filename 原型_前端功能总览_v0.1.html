@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>非油选品 · 智能补货 POC — 前端功能原型 v0.1</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<script>
+if (typeof echarts === 'undefined') document.write('<script src="https://cdn.staticfile.net/echarts/5.4.3/echarts.min.js"><\/script>');
+</script>
+<style>
+:root{
+  --bg:#F4F7F6; --ink:#1A2E2A; --muted:#6B817B;
+  --brand:#0E7C66; --brand-soft:#E3F0EC; --brand-deep:#0A5C4C;
+  --accent:#E86A33; --accent-soft:#FBEDE4;
+  --band:#93B8AE; --warn:#C0392B; --warn-soft:#F9EAE8;
+  --card:#FFFFFF; --line:#DFE9E5; --gold:#B98A2F;
+  --mono:"Cascadia Code",Consolas,"Courier New",monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);
+  font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  font-size:14px;line-height:1.6}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ───── 顶栏 ───── */
+header{position:sticky;top:0;z-index:100;background:var(--ink);color:#fff;
+  display:flex;align-items:center;gap:18px;padding:0 22px;height:58px;flex-wrap:wrap}
+.logo{display:flex;flex-direction:column;line-height:1.25}
+.logo b{font-size:15px;letter-spacing:.5px}
+.logo span{font-size:10.5px;color:#9DB8B1}
+.hdr-sep{width:1px;height:26px;background:#33534C}
+.hdr-item{display:flex;align-items:center;gap:7px;font-size:12.5px;color:#C7D6D2}
+.hdr-item label{color:#8AA69F;font-size:11px}
+select,button{font-family:inherit;font-size:13px;cursor:pointer}
+.hdr-item select{background:#24403A;color:#fff;border:1px solid #3A5A53;
+  border-radius:6px;padding:4px 8px}
+.hdr-badge{margin-left:auto;display:flex;gap:8px;align-items:center}
+.badge{font-size:11px;padding:3px 9px;border-radius:999px;letter-spacing:.3px}
+.badge.data{background:#0E7C66;color:#fff}
+.badge.proto{background:transparent;border:1px solid #3A5A53;color:#9DB8B1}
+
+/* ───── 事件面板 ───── */
+#eventbar{background:var(--accent-soft);border-bottom:1px solid #F2D8C8;
+  padding:9px 22px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:46px}
+#eventbar .ev-title{font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap;
+  display:flex;align-items:center;gap:6px}
+.ev-chip{display:inline-flex;align-items:center;gap:8px;background:#fff;
+  border:1px solid #EFC9B2;border-radius:999px;padding:4px 6px 4px 12px;font-size:12.5px}
+.ev-chip b{color:var(--accent)}
+.ev-chip .coef{font-family:var(--mono);font-size:11px;color:var(--warn)}
+.ev-chip button{border:none;background:#F6E3D6;color:var(--accent);width:18px;height:18px;
+  border-radius:50%;font-size:11px;line-height:1;display:grid;place-items:center}
+.ev-empty{font-size:12.5px;color:#B07A55}
+#btn-add-event{margin-left:auto;background:var(--accent);color:#fff;border:none;
+  border-radius:8px;padding:7px 14px;font-size:12.5px;font-weight:600;
+  display:flex;align-items:center;gap:5px}
+#btn-add-event:hover{background:#D55B24}
+
+/* ───── 主布局 ───── */
+main{display:grid;grid-template-columns:52px 1fr;max-width:1240px;margin:0 auto}
+nav.side{position:sticky;top:104px;height:fit-content;padding:28px 0;
+  display:flex;flex-direction:column;gap:6px;align-items:center}
+nav.side a{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;
+  font-size:11.5px;font-weight:600;color:var(--muted);text-decoration:none;
+  border:1px solid transparent;transition:.15s}
+nav.side a:hover,nav.side a.on{background:#fff;color:var(--brand);border-color:var(--line)}
+nav.side .tip{position:fixed;margin-left:46px;font-size:11px;background:var(--ink);color:#fff;
+  padding:3px 9px;border-radius:5px;opacity:0;pointer-events:none;white-space:nowrap;
+  transition:.15s;margin-top:-26px}
+nav.side a:hover .tip{opacity:1}
+.page{padding:26px 22px 60px;min-width:0}
+
+/* ───── 区块通用 ───── */
+section{margin-bottom:34px;scroll-margin-top:120px}
+.sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+.sec-head .no{font-family:var(--mono);font-size:12px;color:var(--brand);
+  border:1px solid var(--brand);border-radius:6px;padding:1px 7px}
+.sec-head h2{font-size:19px;letter-spacing:.3px}
+.sec-head .sub{font-size:12.5px;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.hint{font-size:11.5px;color:var(--muted)}
+.tag{display:inline-block;font-size:10.5px;padding:1px 8px;border-radius:999px;
+  border:1px solid;line-height:1.7;white-space:nowrap}
+.t-up{color:var(--brand);border-color:#BBDCCF;background:var(--brand-soft)}
+.t-dn{color:var(--warn);border-color:#EBBFB8;background:var(--warn-soft)}
+.t-sea{color:var(--gold);border-color:#E4D3A8;background:#F9F2DF}
+.t-pro{color:var(--accent);border-color:#EFC9B2;background:var(--accent-soft)}
+.t-evt{color:#7C5CBF;border-color:#CFC0EA;background:#F0EBFA}
+.t-low{color:#8A8F8E;border-color:#D8DDDC;background:#F1F3F3}
+
+/* ───── 第一屏 KPI 数字带 ───── */
+.kpi-strip{display:flex;gap:0;background:var(--card);border:1px solid var(--line);
+  border-radius:12px;overflow:hidden;flex-wrap:wrap}
+.kpi{flex:1;min-width:180px;padding:16px 20px;border-right:1px solid var(--line)}
+.kpi:last-child{border-right:none}
+.kpi .k-label{font-size:11.5px;color:var(--muted);letter-spacing:.5px}
+.kpi .k-val{font-family:var(--mono);font-size:26px;font-weight:600;margin:2px 0}
+.kpi .k-sub{font-size:11.5px;display:flex;align-items:center;gap:5px}
+.k-sub .d{font-family:var(--mono);font-weight:600}
+.d.up{color:var(--brand)} .d.dn{color:var(--warn)}
+.kpi.flash{animation:kflash .5s}
+@keyframes kflash{0%{background:var(--brand-soft)}100%{background:transparent}}
+
+.grid-2{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-top:14px}
+.chart-trend{height:300px}
+.chart-mix{height:300px}
+
+/* AI 周报 */
+.ai-card{border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  background:var(--card);display:flex;flex-direction:column}
+.ai-head{background:linear-gradient(135deg,var(--brand-deep),var(--brand));color:#fff;
+  padding:10px 16px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+.ai-head .llm-note{margin-left:auto;font-size:10px;font-weight:400;opacity:.75;
+  background:rgba(255,255,255,.14);padding:2px 8px;border-radius:999px}
+.ai-body{padding:14px 16px;font-size:13.5px;flex:1}
+.ai-body p{margin-bottom:8px;text-indent:2em}
+.ai-body b{color:var(--brand)}
+.ai-foot{padding:8px 16px;border-top:1px dashed var(--line);font-size:11px;color:var(--muted)}
+
+/* ───── 第二屏 建议表 ───── */
+.slider-row{display:flex;align-items:center;gap:16px;background:var(--card);
+  border:1px solid var(--line);border-radius:12px;padding:12px 20px;margin-bottom:12px;flex-wrap:wrap}
+.slider-row .s-label{font-size:12.5px;font-weight:600;white-space:nowrap}
+.slider-row .s-desc{font-size:11.5px;color:var(--muted)}
+#kval{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--brand);min-width:44px}
+input[type=range]{flex:1;min-width:160px;accent-color:var(--brand);height:4px}
+.ss-readout{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap}
+
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:980px}
+th{background:var(--brand-soft);color:var(--brand-deep);font-size:11.5px;font-weight:600;
+  text-align:left;padding:8px 10px;white-space:nowrap;letter-spacing:.3px}
+td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:hover td{background:#F7FAF9}
+tr.adopted td{background:var(--brand-soft)}
+tr.adopted:hover td{background:#D9EDE5}
+.sku-cell b{display:block;font-size:12.5px}
+.sku-cell span{font-size:10.5px;color:var(--muted);font-family:var(--mono)}
+.mu-cell{font-family:var(--mono)}
+.mu-cell .sigma{color:var(--muted);font-size:11px}
+.mu-cell .adj{color:var(--accent);font-size:11px;display:block}
+.low-conf{opacity:.55}
+.low-conf .sku-cell span::after{content:" · 低置信";color:var(--gold)}
+.sugg{font-family:var(--mono);font-weight:700;font-size:15px}
+.sugg.zero{color:var(--muted);font-weight:400;font-size:12px}
+.adj-btn{border:1px solid var(--line);background:#fff;border-radius:6px;width:22px;height:22px;
+  font-size:13px;line-height:1;color:var(--muted);display:inline-grid;place-items:center}
+.adj-btn:hover{border-color:var(--brand);color:var(--brand)}
+.adj-val{font-family:var(--mono);width:30px;text-align:center;font-weight:600}
+.adopt-btn{border:1px solid var(--brand);background:#fff;color:var(--brand);
+  border-radius:7px;padding:3px 12px;font-size:12px;font-weight:600}
+.adopt-btn.on{background:var(--brand);color:#fff}
+.reason-cell{display:flex;gap:4px;flex-wrap:wrap;max-width:180px}
+.llm-cell{font-size:11.5px;color:#4A5D57;max-width:210px;line-height:1.5}
+.llm-cell::before{content:"AI · ";font-weight:700;color:var(--brand);font-size:10px}
+
+.order-bar{display:flex;align-items:center;gap:14px;background:var(--ink);color:#fff;
+  border-radius:12px;padding:12px 20px;margin-top:12px;flex-wrap:wrap}
+.order-bar .o-num{font-family:var(--mono);font-size:20px;font-weight:700;color:#7FD6C0}
+#btn-order{margin-left:auto;background:var(--brand);border:none;color:#fff;border-radius:8px;
+  padding:9px 20px;font-size:13.5px;font-weight:600}
+#btn-order:hover{background:#0F9077}
+.order-bar .o-note{font-size:11px;color:#9DB8B1}
+
+/* ───── 第三屏 榜单 ───── */
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.rank-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line)}
+.rank-item:last-child{border-bottom:none}
+.rank-no{font-family:var(--mono);font-size:11px;width:20px;height:20px;border-radius:50%;
+  display:grid;place-items:center;background:var(--brand-soft);color:var(--brand);flex-shrink:0}
+.rank-no.slow{background:var(--warn-soft);color:var(--warn)}
+.rank-item .r-main{flex:1;min-width:0}
+.rank-item .r-name{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-item .r-sub{font-size:10.5px;color:var(--muted);font-family:var(--mono)}
+.rank-item .r-val{font-family:var(--mono);font-weight:700;font-size:13px}
+.r-val.hot{color:var(--brand)} .r-val.slow{color:var(--warn)}
+.new-item{font-size:12px;padding:8px 0;border-bottom:1px dashed var(--line);line-height:1.5}
+.new-item:last-child{border-bottom:none}
+.new-item b{color:var(--brand)}
+
+/* ───── 附录 效果对比 ───── */
+.vs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.vs-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.vs-card h4{font-size:13px;color:var(--muted);font-weight:600;margin-bottom:10px}
+.vs-row{margin-bottom:12px}
+.vs-row:last-child{margin-bottom:0}
+.vs-row .v-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+.v-label .v-num{font-family:var(--mono);font-weight:700}
+.vs-bar{height:14px;border-radius:7px;background:#EEF3F1;overflow:hidden}
+.vs-fill{height:100%;border-radius:7px;transition:width .8s cubic-bezier(.2,.8,.3,1)}
+.vs-fill.algo{background:linear-gradient(90deg,var(--brand),#18A98C)}
+.vs-fill.now{background:#C4CFCB}
+.vs-delta{text-align:right;font-size:11.5px;margin-top:5px;font-weight:600}
+.vs-delta.good{color:var(--brand)} .vs-delta.bad{color:var(--warn)}
+
+/* ───── 弹层 ───── */
+.overlay{position:fixed;inset:0;background:rgba(20,36,32,.45);z-index:200;
+  display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:14px;width:100%;max-width:520px;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;animation:pop .18s}
+@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+.modal h3{font-size:15px;padding:15px 20px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:8px}
+.modal h3 .x{margin-left:auto;border:none;background:none;font-size:18px;color:var(--muted);cursor:pointer}
+.modal .m-body{padding:16px 20px;max-height:62vh;overflow-y:auto}
+.modal .m-foot{padding:12px 20px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end}
+.btn{border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;border:1px solid var(--line);background:#fff}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.primary:hover{background:#0F9077}
+.f-row{margin-bottom:13px}
+.f-row label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px}
+.f-row select,.f-row input[type=number],.f-row input[type=text]{
+  width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px}
+.ev-type-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.ev-type{border:1.5px solid var(--line);border-radius:10px;padding:9px 8px;text-align:center;cursor:pointer}
+.ev-type .et-icon{font-size:18px}
+.ev-type .et-name{font-size:12px;font-weight:600;margin-top:2px}
+.ev-type .et-desc{font-size:10px;color:var(--muted)}
+.ev-type.on{border-color:var(--accent);background:var(--accent-soft)}
+.coef-preview{background:#F6F9F8;border-radius:9px;padding:9px 12px;font-size:11.5px;color:var(--muted)}
+.coef-preview b{color:var(--accent);font-family:var(--mono)}
+/* 订单清单 */
+.order-line{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.order-line .o-l{font-weight:600}
+.order-line .o-r{font-family:var(--mono)}
+.order-total{display:flex;justify-content:space-between;padding-top:12px;font-size:14px;font-weight:700}
+.order-total .t-num{font-family:var(--mono);color:var(--brand)}
+
+/* ───── 对话浮窗 ───── */
+#chat-fab{position:fixed;right:22px;bottom:22px;width:52px;height:52px;border-radius:50%;
+  background:var(--ink);color:#7FD6C0;border:none;font-size:21px;z-index:150;
+  box-shadow:0 8px 24px rgba(0,0,0,.28);transition:.2s}
+#chat-fab:hover{transform:scale(1.08)}
+#chat-panel{position:fixed;right:22px;bottom:84px;width:360px;max-width:calc(100vw - 44px);
+  height:480px;background:#fff;border-radius:14px;z-index:150;display:none;flex-direction:column;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden}
+#chat-panel.open{display:flex}
+.cp-head{background:var(--ink);color:#fff;padding:11px 15px;font-size:13px;font-weight:600;
+  display:flex;align-items:center;gap:7px}
+.cp-head .cp-note{margin-left:auto;font-size:9.5px;opacity:.7;font-weight:400}
+#chat-log{flex:1;overflow-y:auto;padding:13px;display:flex;flex-direction:column;gap:9px}
+.msg{max-width:88%;padding:8px 12px;border-radius:11px;font-size:12.5px;line-height:1.55;white-space:pre-wrap}
+.msg.user{align-self:flex-end;background:var(--brand);color:#fff;border-bottom-right-radius:3px}
+.msg.bot{align-self:flex-start;background:#F0F5F3;border-bottom-left-radius:3px}
+.msg.bot b{color:var(--brand-deep)}
+.cp-input{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
+.cp-input input{flex:1;border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:12.5px}
+.cp-input button{background:var(--brand);color:#fff;border:none;border-radius:9px;padding:0 14px;font-weight:700}
+.cp-suggest{display:flex;gap:6px;padding:0 10px 9px;flex-wrap:wrap}
+.cp-suggest button{font-size:11px;border:1px solid var(--line);background:#fff;border-radius:999px;
+  padding:3px 10px;color:var(--muted)}
+.cp-suggest button:hover{border-color:var(--brand);color:var(--brand)}
+
+footer{border-top:1px solid var(--line);background:#fff;margin-top:20px;
+  padding:18px 22px;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.9}
+footer b{color:var(--ink)}
+
+@media (max-width:900px){
+  .grid-2,.grid-3,.vs-grid{grid-template-columns:1fr}
+  nav.side{display:none}
+  .hdr-badge{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ 顶栏 ═══════ -->
+<header>
+  <div class="logo"><b>非油选品 · 智能补货</b><span>POC 前端功能原型 v0.1</span></div>
+  <div class="hdr-sep"></div>
+  <div class="hdr-item"><label>门店</label>
+    <select id="sel-store"></select></div>
+  <div class="hdr-item"><label>订货周</label>
+    <select id="sel-week">
+      <option>2017-W30</option><option selected>2017-W31</option><option>2017-W32</option>
+    </select></div>
+  <div class="hdr-badge">
+    <span class="badge data">真实数据 · Favorita 公开数据集</span>
+    <span class="badge proto">原型 · 示意数值</span>
+  </div>
+</header>
+
+<!-- ═══════ 事件面板 ═══════ -->
+<div id="eventbar">
+  <span class="ev-title">📣 已录事件</span>
+  <span class="ev-empty" id="ev-empty">暂无事件 — 添加促销档期或店级事件,预测与建议将实时调整</span>
+  <button id="btn-add-event">＋ 添加事件</button>
+</div>
+
+<main>
+<nav class="side">
+  <a href="#s1" class="on">①<span class="tip">经营概况</span></a>
+  <a href="#s2">②<span class="tip">补货建议(核心)</span></a>
+  <a href="#s3">③<span class="tip">畅销 / 滞销 / 新品</span></a>
+  <a href="#s4">④<span class="tip">效果对比(附录)</span></a>
+</nav>
+
+<div class="page">
+
+<!-- ═══════ 第一屏 · 经营概况 ═══════ -->
+<section id="s1">
+  <div class="sec-head"><span class="no">01</span><h2>本周经营概况</h2>
+    <span class="sub">店长视角 · 周一晨报</span></div>
+
+  <div class="kpi-strip">
+    <div class="kpi"><div class="k-label">周销售额</div><div class="k-val" id="k-sales">—</div>
+      <div class="k-sub" id="k-sales-sub"></div></div>
+    <div class="kpi"><div class="k-label">缺货损失(估)</div><div class="k-val" id="k-loss">—</div>
+      <div class="k-sub" id="k-loss-sub"></div></div>
+    <div class="kpi"><div class="k-label">库存周转天数</div><div class="k-val" id="k-turn">—</div>
+      <div class="k-sub" id="k-turn-sub"></div></div>
+    <div class="kpi"><div class="k-label">在售品类</div><div class="k-val" id="k-cats">—</div>
+      <div class="k-sub" id="k-cats-sub"></div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="sec-head" style="margin-bottom:8px"><h2 style="font-size:15px">12 周品类销售 + 预测带</h2>
+        <span class="sub">μ ± σ · 事件叠加实时重算</span></div>
+      <div id="chart-trend" class="chart-trend"></div>
+    </div>
+    <div class="ai-card">
+      <div class="ai-head">🤖 AI 周报摘要
+        <span class="llm-note">POC 调用外部 LLM · 真实系统替换昆仑大模型</span></div>
+      <div class="ai-body" id="ai-report">—</div>
+      <div class="ai-foot">数字锚定:文本中的数字均来自结构化计算结果,LLM 只做「数据→叙述」翻译,不做自由推理</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 第二屏 · 补货建议 ═══════ -->
+<section id="s2">
+  <div class="sec-head"><span class="no">02</span><h2>补货建议</h2>
+    <span class="sub">核心决策表 · 建议可逐行调整,人审后执行</span></div>
+
+  <div class="slider-row">
+    <span class="s-label">安全库存系数</span>
+    <input type="range" id="k-slider" min="0.5" max="2.0" step="0.1" value="1.0">
+    <span id="kval">1.0</span>
+    <span class="s-desc">建议订量 = ⌈(μ×2周 + k×σ×√2 − 库存 − 在途) ÷ 箱规⌉,滑动全表实时重算</span>
+    <span class="ss-readout" id="ss-readout"></span>
+  </div>
+
+  <div class="card table-wrap">
+    <table>
+      <thead><tr>
+        <th>品类 / SKU</th><th>上周销量</th><th>预测下周</th><th>当前库存</th><th>在途</th>
+        <th>建议订量</th><th>调整</th><th>理由</th><th>AI 解释</th><th>采纳</th>
+      </tr></thead>
+      <tbody id="sugg-body"></tbody>
+    </table>
+  </div>
+
+  <div class="order-bar">
+    <span>已采纳 <span class="o-num" id="adopt-n">0</span> 行</span>
+    <span>合计 <span class="o-num" id="adopt-box">0</span> 箱</span>
+    <span class="o-note">订单清单仅预览,不真下单 · 建议量可人工覆盖</span>
+    <button id="btn-order">生成建议订单清单</button>
+  </div>
+</section>
+
+<!-- ═══════ 第三屏 · 畅销/滞销/新品 ═══════ -->
+<section id="s3">
+  <div class="sec-head"><span class="no">03</span><h2>选品洞察</h2>
+    <span class="sub">畅销扩张 / 滞销退出 / 新品引入</span></div>
+  <div class="grid-3">
+    <div class="card">
+      <div class="sec-head" style="margin-bottom:6px"><h2 style="font-size:14px">畅销 TOP</h2><span class="sub">近 4 周</span></div>
+      <div id="rank-hot"></div>
+    </div>
+    <div class="card">
+      <div class="sec-head" style="margin-bottom:6px"><h2 style="font-size:14px">滞销 TOP</h2><span class="sub">周转天数</span></div>
+      <div id="rank-slow"></div>
+      <div class="ai-card" style="margin-top:10px;border:none">
+        <div class="ai-body" style="font-size:11.5px;padding:10px 12px" id="ai-slow">—</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-head" style="margin-bottom:6px"><h2 style="font-size:14px">新品引入示意</h2><span class="sub">同型门店畅销 · 本店未售</span></div>
+      <div id="rank-new"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 附录 · 效果对比 ═══════ -->
+<section id="s4">
+  <div class="sec-head"><span class="no">04</span><h2>效果对比推演</h2>
+    <span class="sub">附录 · 省公司视角 · 算法建议 vs 现状基线(近 8 周重演)</span></div>
+  <div class="vs-grid">
+    <div class="vs-card"><h4>缺货率</h4><div class="vs-row">
+      <div class="v-label"><span>现状基线</span><span class="v-num" id="vs-so-1">—</span></div>
+      <div class="vs-bar"><div class="vs-fill now" id="vs-b1"></div></div></div>
+      <div class="vs-row">
+      <div class="v-label"><span>算法建议</span><span class="v-num" id="vs-al-1">—</span></div>
+      <div class="vs-bar"><div class="vs-fill algo" id="vs-f1"></div></div>
+      <div class="vs-delta good" id="vs-d1">—</div></div></div>
+    <div class="vs-card"><h4>库存周转(金额加权)</h4><div class="vs-row">
+      <div class="v-label"><span>现状基线</span><span class="v-num" id="vs-so-2">—</span></div>
+      <div class="vs-bar"><div class="vs-fill now" id="vs-b2"></div></div></div>
+      <div class="vs-row">
+      <div class="v-label"><span>算法建议</span><span class="v-num" id="vs-al-2">—</span></div>
+      <div class="vs-bar"><div class="vs-fill algo" id="vs-f2"></div></div>
+      <div class="vs-delta good" id="vs-d2">—</div></div></div>
+    <div class="vs-card"><h4>销售损失挽回</h4><div class="vs-row">
+      <div class="v-label"><span>现状基线</span><span class="v-num" id="vs-so-3">—</span></div>
+      <div class="vs-bar"><div class="vs-fill now" id="vs-b3"></div></div></div>
+      <div class="vs-row">
+      <div class="v-label"><span>算法建议</span><span class="v-num" id="vs-al-3">—</span></div>
+      <div class="vs-bar"><div class="vs-fill algo" id="vs-f3"></div></div>
+      <div class="vs-delta good" id="vs-d3">—</div></div></div>
+  </div>
+  <p class="hint" style="margin-top:10px">⚠️ 推演基于公开数据集重演,方向正确性验证,数值不作为业务承诺。</p>
+</section>
+
+<footer>
+  <b>非油选品 · 智能补货 POC</b> — 数据: Kaggle <b>Favorita</b> 公开数据集(真实零售经营数据,54 门店 × 33 品类, 2013–2017)<br>
+  架构: LLM 做表达/交互层(周报 · 归因 · 对话), 确定性算法做决策层(预测 · 补货公式) · POC 调用外部 LLM, 真实系统替换昆仑大模型<br>
+  本页为前端功能原型 v0.1, 数值为示意, 后续由 Python 离线管线产出数据内嵌替换
+</footer>
+
+</div></main>
+
+<!-- ═══════ 添加事件弹层 ═══════ -->
+<div class="overlay" id="ov-event">
+  <div class="modal">
+    <h3>📣 添加事件<span class="x" onclick="closeOv('ov-event')">×</span></h3>
+    <div class="m-body">
+      <div class="f-row"><label>事件类型</label>
+        <div class="ev-type-grid" id="ev-types">
+          <div class="ev-type on" data-t="promo-nation"><div class="et-icon">🎉</div><div class="et-name">全国促销档</div><div class="et-desc">总部档期</div></div>
+          <div class="ev-type" data-t="promo-store"><div class="et-icon">🏷️</div><div class="et-name">店级临时促销</div><div class="et-desc">本店临促</div></div>
+          <div class="ev-type" data-t="disrupt"><div class="et-icon">🚧</div><div class="et-name">店级突发事件</div><div class="et-desc">修路/天气</div></div>
+        </div>
+      </div>
+      <div class="f-row"><label>影响品类</label>
+        <select id="ev-cat"></select></div>
+      <div class="f-row"><label>持续周次</label>
+        <select id="ev-dur"><option value="1">1 周</option><option value="2" selected>2 周</option><option value="3">3 周</option><option value="4">4 周</option></select></div>
+      <div class="coef-preview" id="ev-preview">—</div>
+      <p class="hint" style="margin-top:9px">提升系数来自 lift_estimator 对促销历史的回归估计(非硬编码),事件生效时 σ 同步 ×1.2。</p>
+    </div>
+    <div class="m-foot"><button class="btn" onclick="closeOv('ov-event')">取消</button>
+      <button class="btn primary" id="ev-apply">应用事件</button></div>
+  </div>
+</div>
+
+<!-- ═══════ 订单清单弹层 ═══════ -->
+<div class="overlay" id="ov-order">
+  <div class="modal">
+    <h3>📋 建议订单清单(预览)<span class="x" onclick="closeOv('ov-order')">×</span></h3>
+    <div class="m-body" id="order-list">—</div>
+    <div class="m-foot">
+      <span class="hint" style="margin-right:auto;align-self:center">仅预览 · 不真下单 · 人审后执行</span>
+      <button class="btn" onclick="closeOv('ov-order')">关闭</button>
+      <button class="btn primary">导出清单 → 原订货系统</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ 对话浮窗 ═══════ -->
+<button id="chat-fab" title="对话问答">💬</button>
+<div id="chat-panel">
+  <div class="cp-head">🤖 选品助手 · 对话问答
+    <span class="cp-note">前端直连 LLM · 上下文=本店本周报告</span></div>
+  <div id="chat-log"></div>
+  <div class="cp-suggest">
+    <button data-q="为什么 PRODUCE 建议订这么多?">为什么 PRODUCE 建议订这么多?</button>
+    <button data-q="本周哪些品类缺货风险最高?">哪些品类缺货风险最高?</button>
+    <button data-q="LIQUOR,WINE,BEER 卖得怎么样?">LIQUOR 卖得怎么样?</button>
+  </div>
+  <div class="cp-input">
+    <input id="chat-in" placeholder="问点什么… 如:为什么 CLEANING 建议不订?">
+    <button id="chat-send">发送</button>
+  </div>
+</div>
+
+<script>
+/* ══════════════ 数据层(示意值,量级对齐 Favorita 真实数据) ══════════════ */
+const LIFT = {  // lift_estimator 回归系数示意(品类 → 各事件类型提升系数)
+  'promo-nation': {'GROCERY I':1.45,'BEVERAGES':1.62,'PRODUCE':1.38,'CLEANING':1.25,'DAIRY':1.31,'BREAD/BAKERY':1.40,'PERSONAL CARE':1.22,'DELI':1.28},
+  'promo-store' : {'GROCERY I':1.18,'BEVERAGES':1.30,'PRODUCE':1.15,'CLEANING':1.08,'DAIRY':1.12,'BREAD/BAKERY':1.22,'PERSONAL CARE':1.05,'DELI':1.10},
+  'disrupt'     : {'GROCERY I':0.72,'BEVERAGES':0.68,'PRODUCE':0.60,'CLEANING':0.85,'DAIRY':0.75,'BREAD/BAKERY':0.65,'PERSONAL CARE':0.88,'DELI':0.70}
+};
+const EVT_NAME = {'promo-nation':'全国促销档','promo-store':'店级临促','disrupt':'店级突发(修路)'};
+
+const STORES = {
+ '1':{name:'Store 1 · Quito Centro', type:'城区大店',
+   kpi:{sales:'$41,286', salesD:'+6.8%', loss:'$712', lossD:'-12%', turn:'38 天', turnD:'-4 天', cats:'33', catsSub:'低置信 3'},
+   cats:[
+    {cat:'GROCERY I',    last:3120, mu:3280, sigma:340, stock:2600, transit:1200, box:24, price:2.1, conf:1, tags:[['t-up','趋势↑'],['t-pro','促销档'],] , llm:'基础销量近8周稳步上行,叠加全国促销档系数1.45,建议覆盖两周需求并提高安全垫。'},
+    {cat:'BEVERAGES',    last:2860, mu:3020, sigma:410, stock:1980, transit: 960, box:24, price:1.4, conf:1, tags:[['t-up','趋势↑'],['t-sea','季节'],], llm:'夏季季节指数1.28持续,饮料处于全年高峰,预测均值上调,当前库存仅够4.6天。'},
+    {cat:'PRODUCE',      last:2450, mu:2540, sigma:520, stock: 640, transit: 480, box:12, price:1.8, conf:1, tags:[['t-pro','促销档'],['t-up','趋势↑'],['t-evt','事件'],], llm:'生鲜易腐且促销档系数高(1.38),库存深度仅3.5天,建议加大补货但注意损耗。'},
+    {cat:'CLEANING',      last:1120, mu:1060, sigma:130, stock:2140, transit: 360, box:30, price:2.9, conf:1, tags:[['t-low','库存充足'],['t-dn','趋势↓'],], llm:'库存可支撑约14天,趋势走平略降,本期无需补货,资金沉淀可转移给畅销品类。'},
+    {cat:'DAIRY',         last:1580, mu:1650, sigma:210, stock:1220, transit: 720, box:18, price:2.3, conf:1, tags:[['t-sea','季节'],['t-up','趋势↑'],], llm:'乳制品周波动小、保质期短,按两周需求+1.0σ安全垫补货即可,不宜过量。'},
+    {cat:'BREAD/BAKERY',   last:1310, mu:1240, sigma:180, stock: 520, transit: 300, box:20, price:1.6, conf:1, tags:[['t-low','库存天数低'],['t-sea','季节'],], llm:'烘焙库存3.4天偏紧,季节指数上行,建议补两箱保档期不断货。'},
+    {cat:'PERSONAL CARE',  last: 890, mu: 920, sigma:110, stock:1780, transit: 240, box:20, price:3.6, conf:1, tags:[['t-low','库存充足'],], llm:'个护周转慢但客单高,库存12天充足,本期不订,关注临期。'},
+    {cat:'DELI',           last: 640, mu: 610, sigma: 95, stock: 410, transit: 180, box:15, price:3.1, conf:0, tags:[['t-dn','低置信'],], llm:'历史不足8周,以同品类均值×门店系数估计,灰显提示,建议人工复核。'}
+   ],
+   hot:[['GROCERY I','$6,576/w'],['BEVERAGES','$4,004/w'],['PRODUCE','$4,410/w'],['DAIRY','$3,795/w'],['BREAD/BAKERY','$2,096/w']],
+   slow:[['HOME APPLIANCES','96 天'],['LAWN AND GARDEN','81 天'],['BABY CARE','74 天'],['BOOKS','69 天'],['MAGAZINES','61 天']],
+   slowAI:'滞销 TOP5 合计占用资金约 $1,840。建议: LAWN AND GARDEN 与 BOOKS 折价清仓并退出陈列位, BABY CARE 保留最小 SKU 集观察两周, HOME APPLIANCES 移至线上专供。',
+   news:[['FROZEN FOODS','同型城区店 87% 在售,本店缺位,预估周销 $120+'],['HOME CARE','邻近 Store 4/6 周销 $310,建议引入试用'],['PLAYERS AND ELECTRONICS','季节性抬头,下月足球季前铺货']],
+   vs:{so:['9.6%','52 天','$842/w'],al:['4.1%','41 天','$367/w'],d1:'缺货率 -5.5pp',d2:'周转快 11 天',d3:'周损失挽回 $475'} },
+ '44':{name:'Store 44 · Esmeraldas', type:'海滨旅游店',
+   kpi:{sales:'$18,940', salesD:'+14.2%', loss:'$508', lossD:'+8%', turn:'44 天', turnD:'+2 天', cats:'33', catsSub:'低置信 5'},
+   cats:[
+    {cat:'BEVERAGES',    last:2140, mu:2480, sigma:390, stock:1520, transit: 840, box:24, price:1.4, conf:1, tags:[['t-sea','旺季'],['t-up','趋势↑'],['t-evt','事件'],], llm:'海滨旅游旺季+当地节庆(事件系数1.30),预测显著上调,建议足额覆盖两周。'},
+    {cat:'GROCERY I',    last:1820, mu:1960, sigma:240, stock:2140, transit: 720, box:24, price:2.1, conf:1, tags:[['t-low','库存充足'],], llm:'库存约11天,客流高峰集中在饮料与即食,常规补货即可。'},
+    {cat:'PRODUCE',      last:1180, mu:1290, sigma:330, stock: 460, transit: 240, box:12, price:1.8, conf:1, tags:[['t-low','库存天数低'],], llm:'库存仅3天,旺季鲜销脉冲大,建议本周补足并加密下一周期盘点。'},
+    {cat:'DELI',          last: 720, mu: 810, sigma:150, stock: 390, transit: 180, box:15, price:3.1, conf:1, tags:[['t-up','趋势↑'],['t-sea','旺季'],], llm:'即食熟食受游客驱动明显,近4周+18%,按上调后均值补货。'},
+    {cat:'CLEANING',      last: 540, mu: 510, sigma: 80, stock: 980, transit: 240, box:30, price:2.9, conf:1, tags:[['t-low','库存充足'],['t-dn','趋势↓'],], llm:'淡季品类,库存充足不订。'}
+   ],
+   hot:[['BEVERAGES','$2,996/w'],['GROCERY I','$3,822/w'],['PRODUCE','$2,322/w'],['DELI','$2,511/w'],['BREAD/BAKERY','$1,442/w']],
+   slow:[['BEAUTY','88 天'],['LINGerie','77 天'],['CELEBRATION','72 天'],['HOME APPLIANCES','70 天'],['SCHOOL AND OFFICE SUPPLIES','58 天']],
+   slowAI:'旅游店客群以即食饮品为主,个护与家居品类周转偏慢。建议 BEAUTY 压缩 SKU 至防晒/基础护理, CELEBRATION 节庆前再陈列。',
+   news:[['BEER/WINE 单品组合','旅游季同比+32%,扩冷柜位'],['POULTRY','熟食关联销售,邻近 Store 45 验证有效']],
+   vs:{so:['11.2%','58 天','$610/w'],al:['5.0%','46 天','$288/w'],d1:'缺货率 -6.2pp',d2:'周转快 12 天',d3:'周损失挽回 $322'} },
+ '46':{name:'Store 46 · Cayambe', type:'高原小镇店',
+   kpi:{sales:'$9,870', salesD:'-2.4%', loss:'$296', lossD:'-5%', turn:'47 天', turnD:'+1 天', cats:'33', catsSub:'低置信 6'},
+   cats:[
+    {cat:'GROCERY I',    last:1180, mu:1130, sigma:150, stock:1310, transit: 480, box:24, price:2.1, conf:1, tags:[['t-low','库存充足'],['t-dn','趋势↓'],], llm:'高原小镇客流稳定,GROCERY 库存充足,本期小补即可。'},
+    {cat:'BEVERAGES',     last: 860, mu: 900, sigma:130, stock: 620, transit: 360, box:24, price:1.4, conf:1, tags:[['t-sea','季节'],], llm:'季节上行但基数小,标准公式补货。'},
+    {cat:'PRODUCE',       last: 540, mu: 560, sigma:140, stock: 280, transit: 120, box:12, price:1.8, conf:1, tags:[['t-low','库存天数低'],], llm:'库存3.4天,按公式补两周覆盖。'},
+    {cat:'DAIRY',         last: 470, mu: 480, sigma: 70, stock: 520, transit: 180, box:18, price:2.3, conf:1, tags:[['t-low','库存充足'],], llm:'库存充足,不订。'}
+   ],
+   hot:[['GROCERY I','$2,373/w'],['BEVERAGES','$1,204/w'],['PRODUCE','$1,008/w'],['DAIRY','$1,104/w'],['CLEANING','$1,479/w']],
+   slow:[['AUTOMOTIVE','102 天'],['HARDWARE','93 天'],['PET SUPPLIES','85 天'],['LINGerie','79 天'],['BEAUTY','75 天']],
+   slowAI:'小镇店汽配五金需求有限但周边无竞争门店,建议保留最小陈列面; PET SUPPLIES 可与 GROCERY 联陈列提升连带。',
+   news:[['WINTER 保暖用品','高原入冬,同海拔门店验证周销 +$80']],
+   vs:{so:['8.8%','55 天','$410/w'],al:['3.8%','43 天','$178/w'],d1:'缺货率 -5.0pp',d2:'周转快 12 天',d3:'周损失挽回 $232'} }
+};
+
+/* ══════════════ 状态 ══════════════ */
+let curStore='1', k=1.0, events=[], adopted={}, adj={}, chart=null;
+
+const $=id=>document.getElementById(id);
+const fmt=n=>n.toLocaleString('en-US');
+function cats(){return STORES[curStore].cats}
+function evAffect(cat){ // 返回该品类当前生效的事件 {coef, name}
+  for(const e of events){ if(e.cat===cat) return e; } return null;
+}
+
+/* ══════════════ 门店/周选择 ══════════════ */
+const sel=$('sel-store');
+for(const id in STORES){const o=document.createElement('option');o.value=id;
+  o.textContent=`${STORES[id].name}(${STORES[id].type})`;sel.appendChild(o);}
+sel.onchange=()=>{curStore=sel.value;events=[];adopted={};adj={};
+  $('ev-empty').style.display='';renderEvents();renderAll();};
+
+/* ══════════════ KPI / 周报 / 榜单 / 对比 ══════════════ */
+function renderKpi(){
+  const s=STORES[curStore],kq=s.kpi;
+  $('k-sales').textContent=kq.sales; $('k-loss').textContent=kq.loss;
+  $('k-turn').textContent=kq.turn;   $('k-cats').textContent=kq.cats;
+  const setSub=(id,txt,dir)=>{const el=$(id);el.innerHTML=txt;
+    el.className='k-sub';if(dir!==undefined)el.querySelector('.d').className='d '+(dir?'up':'dn');};
+  setSub('k-sales-sub',`环比 <b class="d">${kq.salesD}</b>`,!kq.salesD.includes('-'));
+  setSub('k-loss-sub',`环比 <b class="d">${kq.lossD}</b>`,kq.lossD.includes('-'));
+  setSub('k-turn-sub',`环比 <b class="d">${kq.turnD}</b>`,kq.turnD.includes('-'));
+  $('k-cats-sub').textContent=kq.catsSub;
+  $('ai-report').innerHTML=
+   `<p>本周销售额 <b>${kq.sales}</b>,环比 ${kq.salesD.startsWith('-')?'回落':'上行'} ${kq.salesD.replace(/[+-]/,'')};缺货损失(估) <b>${kq.loss}</b>,主要缺口集中在 PRODUCE 与 BREAD/BAKERY。</p>`+
+   `<p>预测下周需求整体 ${evCount()?'受 <b>'+evCount()+' 个事件</b> 影响上修':'延续季节性上行'};建议优先补足生鲜与烘焙,清洁与个护资金沉淀可转投旺季品类。</p>`+
+   `<p>滞销端 ${s.slow[0][0]} 周转 ${s.slow[0][1]},建议按 AI 处理方案执行。</p>`;
+}
+function evCount(){return events.length}
+function renderRanks(){
+  const s=STORES[curStore];
+  $('rank-hot').innerHTML=s.hot.map((r,i)=>`<div class="rank-item">
+    <span class="rank-no">${i+1}</span><div class="r-main"><div class="r-name">${r[0]}</div></div>
+    <span class="r-val hot num">${r[1]}</span></div>`).join('');
+  $('rank-slow').innerHTML=s.slow.map((r,i)=>`<div class="rank-item">
+    <span class="rank-no slow">${i+1}</span><div class="r-main"><div class="r-name">${r[0]}</div></div>
+    <span class="r-val slow num">${r[1]}</span></div>`).join('');
+  $('ai-slow').innerHTML='🤖 '+s.slowAI;
+  $('rank-new').innerHTML=s.news.map(r=>`<div class="new-item">💡 <b>${r[0]}</b><br>${r[1]}</div>`).join('');
+}
+function renderVs(){
+  const v=STORES[curStore].vs;
+  const rows=[['1','so','al'],]; // 占位
+  $('vs-so-1').textContent=v.so[0];$('vs-al-1').textContent=v.al[0];
+  $('vs-so-2').textContent=v.so[1];$('vs-al-2').textContent=v.al[1];
+  $('vs-so-3').textContent=v.so[2];$('vs-al-3').textContent=v.al[2];
+  // 条长按相对比例
+  const pct=(a,b)=>{const na=parseFloat(a),nb=parseFloat(b);return Math.max(na/nb*100,8)};
+  $('vs-b1').style.width='100%'; $('vs-f1').style.width=pct(v.al[0],v.so[0])+'%';
+  $('vs-b2').style.width='100%'; $('vs-f2').style.width=pct(v.al[1],v.so[1])+'%';
+  $('vs-b3').style.width='100%'; $('vs-f3').style.width=pct(v.al[2],v.so[2])+'%';
+  $('vs-d1').textContent=v.d1;$('vs-d2').textContent=v.d2;$('vs-d3').textContent=v.d3;
+}
+
+/* ══════════════ 建议表(核心交互) ══════════════ */
+function calcSugg(c){
+  const e=evAffect(c.cat);
+  const mu=c.mu*(e?LIFT[e.type][c.cat]||1:1), sigma=c.sigma*(e?1.2:1);
+  const raw=c.mu*2+k*sigma*Math.SQRT2-c.stock-c.transit;
+  return {mu,sigma,box:Math.max(0,Math.ceil(raw/c.box)),ev:e};
+}
+function renderTable(){
+  const tb=$('sugg-body');tb.innerHTML='';
+  let adoptN=0,adoptBox=0;
+  cats().forEach((c,i)=>{
+    const r=calcSugg(c),isAd=adopted[i],final=isAd?(adj[i]!==undefined?adj[i]:r.box):null;
+    if(isAd){adoptN++;adoptBox+=final;}
+    const tr=document.createElement('tr');
+    if(isAd)tr.className='adopted';
+    if(!c.conf)tr.classList.add('low-conf');
+    tr.innerHTML=`
+      <td class="sku-cell"><b>${c.cat}</b><span>箱规 ${c.box} · $${c.price}</span></td>
+      <td class="num">${fmt(c.last)}</td>
+      <td class="mu-cell num">${fmt(Math.round(r.mu))}<span class="sigma"> ±${fmt(Math.round(r.sigma))}</span>
+        ${r.ev?`<span class="adj">⚡事件×${(LIFT[r.ev.type][c.cat]||1).toFixed(2)}</span>`:''}</td>
+      <td class="num">${fmt(c.stock)}</td>
+      <td class="num">${fmt(c.transit)}</td>
+      <td><span class="sugg ${r.box===0?'zero':''}">${r.box===0?'不订':r.box+' 箱'}</span></td>
+      <td><button class="adj-btn" data-i="${i}" data-d="-1">−</button>
+          <span class="adj-val" id="adj-${i}">${final??'–'}</span>
+          <button class="adj-btn" data-i="${i}" data-d="1">＋</button></td>
+      <td><div class="reason-cell">${c.tags.map(t=>`<span class="tag ${t[0]}">${t[1]}</span>`).join('')}</div></td>
+      <td class="llm-cell">${c.llm}</td>
+      <td><button class="adopt-btn ${isAd?'on':''}" data-i="${i}">${isAd?'已采纳':'采纳'}</button></td>`;
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll('.adopt-btn').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i;
+    if(adopted[i]){delete adopted[i];delete adj[i];}
+    else{adopted[i]=true;adj[i]=calcSugg(cats()[i]).box;}
+    renderTable();
+  });
+  tb.querySelectorAll('.adj-btn').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i,d=+b.dataset.d;
+    if(!adopted[i]){adopted[i]=true;adj[i]=calcSugg(cats()[i]).box;}
+    adj[i]=Math.max(0,(adj[i]??0)+d);
+    renderTable();
+  });
+  $('adopt-n').textContent=adoptN; $('adopt-box').textContent=adoptBox;
+  const ss=cats().reduce((a,c)=>{const r=calcSugg(c);return a+k*r.sigma*Math.SQRT2},0);
+  $('ss-readout').textContent=`安全库存合计 ≈ ${fmt(Math.round(ss))} 件`;
+}
+$('k-slider').oninput=e=>{k=+e.target.value;$('kval').textContent=k.toFixed(1);renderTable();};
+
+/* ══════════════ 订单清单 ══════════════ */
+$('btn-order').onclick=()=>{
+  const rows=Object.keys(adopted).map(i=>({c:cats()[+i],q:adj[i]??calcSugg(cats()[+i]).box}));
+  $('order-list').innerHTML=rows.length?rows.map(r=>`<div class="order-line">
+      <span class="o-l">${r.c.cat}</span><span class="o-r">${r.q} 箱 ×${r.c.box} = ${r.q*r.c.box} 件 · 约 $${(r.q*r.c.box*r.c.price).toFixed(0)}</span></div>`).join('')+
+    `<div class="order-total"><span>合计</span><span class="t-num">${rows.reduce((a,r)=>a+r.q,0)} 箱 · 约 $${rows.reduce((a,r)=>a+r.q*r.c.box*r.c.price,0).toFixed(0)}</span></div>`
+    :'<p class="hint">尚未采纳任何行 — 在建议表中点击「采纳」或用 ± 调整后生成。</p>';
+  openOv('ov-order');
+};
+
+/* ══════════════ 事件面板 ══════════════ */
+let evType='promo-nation';
+$('ev-types').querySelectorAll('.ev-type').forEach(el=>el.onclick=()=>{
+  $('ev-types').querySelectorAll('.ev-type').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');evType=el.dataset.t;previewEv();
+});
+function fillEvCats(){
+  const sel=$('ev-cat');sel.innerHTML='';
+  cats().forEach(c=>{const o=document.createElement('option');o.value=c.cat;o.textContent=c.cat;sel.appendChild(o);});
+}
+function previewEv(){
+  const cat=$('ev-cat').value||cats()[0].cat;
+  const coef=LIFT[evType][cat]??1.0;
+  $('ev-preview').innerHTML=`将应用: <b>${EVT_NAME[evType]}</b> → ${cat} · 需求系数 <b>×${coef.toFixed(2)}</b> · σ ×1.2`;
+}
+$('btn-add-event').onclick=()=>{fillEvCats();previewEv();openOv('ov-event');};
+$('ev-cat').onchange=previewEv;
+$('ev-apply').onclick=()=>{
+  events.push({type:evType,cat:$('ev-cat').value,dur:+$('ev-dur').value});
+  renderEvents();renderAll();closeOv('ov-event');
+};
+function renderEvents(){
+  document.querySelectorAll('.ev-chip').forEach(x=>x.remove());
+  $('ev-empty').style.display=events.length?'none':'';
+  events.forEach((e,i)=>{
+    const chip=document.createElement('span');chip.className='ev-chip';
+    chip.innerHTML=`<b>${EVT_NAME[e.type]}</b> ${e.cat} · ${e.dur}周
+      <span class="coef">×${(LIFT[e.type][e.cat]||1).toFixed(2)}</span>
+      <button data-i="${i}">×</button>`;
+    chip.querySelector('button').onclick=()=>{events.splice(i,1);renderEvents();renderAll();};
+    $('btn-add-event').before(chip);
+  });
+}
+
+/* ══════════════ 趋势图(ECharts) ══════════════ */
+function renderChart(){
+  if(!window.echarts)return;
+  if(!chart)chart=echarts.init($('chart-trend'));
+  const s=STORES[curStore],n=s.cats.length;
+  // 合成12周历史: 各品类 mu 附近带噪声;预测2周 = Σμ±σ,叠加事件
+  const hist=[],wk=[];
+  for(let w=11;w>=0;w--){let tot=0;
+    cats().forEach(c=>{tot+=c.mu*(0.9+0.2*Math.abs(Math.sin(w*2.7+c.mu)))*(1-w*0.008)});
+    hist.push(Math.round(tot));wk.push(w===0?'本周':`W${31-w}`);}
+  let mu=0,sg=0;
+  cats().forEach(c=>{const r=calcSugg(c);mu+=r.mu;sg+=r.sigma*r.sigma;});
+  const pred=[Math.round(mu),Math.round(mu*1.02)];
+  const up=[Math.round(mu+Math.sqrt(sg)),Math.round(mu*1.02+Math.sqrt(sg))];
+  const dn=[Math.round(mu*1.02-Math.sqrt(sg)),Math.round(mu-Math.sqrt(sg))];
+  chart.setOption({
+    grid:{left:52,right:16,top:30,bottom:26},
+    tooltip:{trigger:'axis'},
+    legend:{data:['历史销量','预测 μ','μ±σ 区间'],top:2,right:8,
+      textStyle:{fontSize:11,color:'#6B817B'}},
+    xAxis:{type:'category',data:[...wk,'W32','W33'],
+      axisLabel:{fontSize:10,color:'#6B817B'},axisLine:{lineStyle:{color:'#DFE9E5'}}},
+    yAxis:{type:'value',splitLine:{lineStyle:{color:'#EEF3F1'}},axisLabel:{fontSize:10,color:'#6B817B'}},
+    series:[
+      {name:'历史销量',type:'bar',data:[...hist,null,null],itemStyle:{color:'#93B8AE',borderRadius:[3,3,0,0]},barWidth:'55%'},
+      {name:'预测 μ',type:'line',data:[null,...pred],lineStyle:{type:'dashed',color:'#0E7C66',width:2},
+       symbol:'circle',symbolSize:7,itemStyle:{color:'#0E7C66'}},
+      {name:'μ+σ',type:'line',data:[null,...up],lineStyle:{color:'rgba(14,124,102,.35)',width:1},
+       symbol:'none',areaStyle:{color:'rgba(14,124,102,.10)'},tooltip:{show:false},silent:true},
+      {name:'μ−σ',type:'line',data:[null,...dn],lineStyle:{color:'rgba(14,124,102,.35)',width:1},
+       symbol:'none',tooltip:{show:false},silent:true}
+    ]
+  },{notMerge:true});
+}
+window.addEventListener('resize',()=>chart&&chart.resize());
+
+/* ══════════════ 对话浮窗(mock,待接百炼 API) ══════════════ */
+const chatLog=$('chat-log');
+function pushMsg(txt,who){const m=document.createElement('div');m.className='msg '+who;
+  m.textContent=txt;chatLog.appendChild(m);chatLog.scrollTop=chatLog.scrollHeight;}
+function botAnswer(q){
+  const s=STORES[curStore];
+  if(q.includes('PRODUCE')){const c=s.cats.find(x=>x.cat==='PRODUCE'),r=calcSugg(c);
+    return `PRODUCE 本周预测 μ=${fmt(Math.round(r.mu))} 件(σ=±${fmt(Math.round(r.sigma))})${r.ev?',已叠加事件系数':''}。当前库存 ${fmt(c.stock)}+在途 ${fmt(c.transit)},仅够约 ${((c.stock+c.transit)/r.mu*7).toFixed(1)} 天;促销档系数 1.38 下需求进一步上修,按公式建议补 ${r.box} 箱(箱规${c.box})。生鲜高周转高损耗,宁可高频小补。`;}
+  if(q.includes('缺货')||q.includes('风险')){const top=[...s.cats].map(c=>({c,d:(c.stock+c.transit)/calcSugg(c).mu})).sort((a,b)=>a.d-b.d).slice(0,3);
+    return `缺货风险 TOP3(库存覆盖天数):\n`+top.map((t,i)=>`${i+1}. ${t.c.cat} — 仅 ${t.d.toFixed(1)} 天`).join('\n')+`\n建议优先采纳这三行的补货建议。`;}
+  if(q.includes('LIQUOR'))return 'LIQUOR,WINE,BEER 近4周周均 $1,850,环比 +9%,旺季驱动。当前库存覆盖 9 天,建议按公式标准补货,并检查高端单品的陈列位。';
+  if(q.includes('CLEANING')){const c=s.cats.find(x=>x.cat==='CLEANING');return `CLEANING 库存 ${fmt(c.stock)} 件,覆盖约 ${(c.stock/c.mu*7).toFixed(0)} 天,趋势走平,本期建议不订——把资金让给旺季品类。`;}
+  return `已基于 ${s.name} · 2017-W31 的报告数据回答框架:我会先读建议表与 KPI,再引用数字作答(数字锚定,不自由推理)。正式版由百炼 Qwen 现场生成,此为 mock 演示。`;
+}
+$('chat-fab').onclick=()=>$('chat-panel').classList.toggle('open');
+$('chat-send').onclick=send;
+$('chat-in').onkeydown=e=>{if(e.key==='Enter')send()};
+document.querySelectorAll('.cp-suggest button').forEach(b=>b.onclick=()=>{
+  $('chat-in').value=b.dataset.q;send();});
+function send(){const v=$('chat-in').value.trim();if(!v)return;
+  pushMsg(v,'user');$('chat-in').value='';
+  setTimeout(()=>pushMsg(botAnswer(v),'bot'),350);}
+
+/* ══════════════ 弹层通用 ══════════════ */
+function openOv(id){$(id).classList.add('open')}
+function closeOv(id){$(id).classList.remove('open')}
+document.querySelectorAll('.overlay').forEach(ov=>ov.onclick=e=>{if(e.target===ov)ov.classList.remove('open')});
+
+/* ══════════════ 总渲染 ══════════════ */
+function renderAll(){renderKpi();renderTable();renderChart();renderRanks();renderVs();}
+renderAll();
+pushMsg('你好,霖哥 👋 我是选品助手。可问:「为什么 PRODUCE 建议订这么多?」「哪些品类缺货风险最高?」','bot');
+pushMsg('⚠️ 当前为 mock 演示:正式版前端直连百炼 Qwen API(key 存 localStorage,不进交付物),上下文=当前门店+周报告 JSON。','bot');
+</script>
+</body>
+</html>
