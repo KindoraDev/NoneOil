@@ -11,11 +11,12 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-HTML = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "原型_前端功能总览_v0.3.html")
+HTML = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "原型_前端功能总览_v0.4.html")
 
 INJECT = [
     (r"VDATA_START", r"VDATA_END", os.path.join(ROOT, "out", "views_data.json")),
     (r"BDATA_START", r"BDATA_END", os.path.join(ROOT, "out", "backtest.json")),
+    (r"DDATA_START", r"DDATA_END", os.path.join(ROOT, "out", "decision.json")),
 ]
 
 with open(HTML, encoding="utf-8") as f:
