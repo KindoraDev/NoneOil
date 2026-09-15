@@ -6,3 +6,5 @@ data/*
 !data/favorita/
 data/favorita/*
 !data/favorita/download.py
+llm_key.js
+scripts/llm_config.json

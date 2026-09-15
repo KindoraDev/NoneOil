@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>非油选品 · 智能补货 POC — 前端功能原型 v0.1</title>
+<script src="llm_key.js" onerror="/*本地key文件不存在,回退localStorage*/"></script>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 <script>
 if (typeof echarts === 'undefined') document.write('<script src="https://cdn.staticfile.net/echarts/5.4.3/echarts.min.js"><\/script>');
@@ -908,7 +909,7 @@ $('chat-in').onkeydown=e=>{if(e.key==='Enter')send()};
 document.querySelectorAll('.cp-suggest button').forEach(b=>b.onclick=()=>{
   $('chat-in').value=b.dataset.q;send();});
 /* ── 对话: 前端直连百炼(OpenAI 兼容), key 存 localStorage ── */
-const LLM_CFG = {base:'https://dashscope.aliyuncs.com/compatible-mode/v1', model:'qwen-plus'};
+const LLM_CFG = {base:'https://dashscope.aliyuncs.com/compatible-mode/v1', model:(typeof BAILIAN_MODEL!=='undefined'&&BAILIAN_MODEL)||'qwen-plus'};
 document.addEventListener('click', e => {
   if (e.target && e.target.id === 'cp-key-btn') {
     const k = prompt('输入百炼 API key(存本机 localStorage, 不写入交付物):', localStorage.getItem('bailian_key') || '');
@@ -923,7 +924,7 @@ function storeContext(){
     滞销:s.slow, 畅销:s.hot, 效果对比:s.vs});
 }
 async function llmChat(q){
-  const key = localStorage.getItem('bailian_key');
+  const key = (typeof BAILIAN_KEY !== 'undefined' && BAILIAN_KEY) || localStorage.getItem('bailian_key');
   if (!key) return null;
   const body = {model:LLM_CFG.model, messages:[
     {role:'system', content:'你是门店选品助手。只依据提供的报告 JSON 回答,引用其中的数字,禁止编造数字或推算;数据里没有的就明说。用简体中文,简洁,店长口吻。'},
