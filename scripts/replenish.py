@@ -123,7 +123,7 @@ for sid, name, label in REP:
                "lost": [f"${vs['base']['lost'] / 54 / 12:,.0f}/w", f"${vs['algo']['lost'] / 54 / 12:,.0f}/w"]},
     }
 
-out = {"week": WK, "stores": stores_out,
+out = {"week": WK, "stores": stores_out, "order": [s[0] for s in REP],
        "note": "预测 μ±σ 来自 forecast.py 真实计算; 库存/在途为构造假设; "
                "箱规/单价为品类级演示口径; 缺货与周转为 analysis.py 推演值"}
 with open(os.path.join(OUT, "decision.json"), "w", encoding="utf-8") as f:
