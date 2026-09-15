@@ -1223,6 +1223,15 @@ function renderDv(v, force) {
 /* ══════════════ 总渲染 ══════════════ */
 function renderAll(){renderKpi();renderTable();renderChart();renderRanks();renderVs();}
 LIFT = buildLift();   /* BT 已声明, 初始化事件系数表 */
+/* key 状态指示 */
+(function(){
+  const btn = document.getElementById('cp-key-btn');
+  if(!btn) return;
+  const hasKey = (typeof BAILIAN_KEY !== 'undefined' && BAILIAN_KEY) || localStorage.getItem('bailian_key');
+  btn.textContent = hasKey ? '已连接' : '设置key';
+  btn.style.background = hasKey ? 'rgba(127,214,192,.25)' : 'rgba(232,106,51,.35)';
+  btn.title = hasKey ? '百炼 key 已加载(llm_key.js/localStorage), 可直接提问' : '未检测到 key: 确认 llm_key.js 与本文件同目录, 或点击手动录入';
+})();
 renderAll();
 /* URL hash 直达: #stores / #cat / #events / #oil */
 const h0 = location.hash.slice(1);
