@@ -878,11 +878,11 @@ function renderChart(){
     yAxis:{type:'value',splitLine:{lineStyle:{color:'#EEF3F1'}},axisLabel:{fontSize:10,color:'#6B817B'}},
     series:[
       {name:'历史销量',type:'bar',data:[...hist,null,null],itemStyle:{color:'#93B8AE',borderRadius:[3,3,0,0]},barWidth:'55%'},
-      {name:'预测 μ',type:'line',data:[null,...pred],lineStyle:{type:'dashed',color:'#0E7C66',width:2},
+      {name:'预测 μ',type:'line',data:[...Array(hist.length).fill(null),...pred],lineStyle:{type:'dashed',color:'#0E7C66',width:2},
        symbol:'circle',symbolSize:7,itemStyle:{color:'#0E7C66'}},
-      {name:'μ+2σ',type:'line',data:[null,...up],lineStyle:{color:'rgba(14,124,102,.35)',width:1},
+      {name:'μ+2σ',type:'line',data:[...Array(hist.length).fill(null),...up],lineStyle:{color:'rgba(14,124,102,.35)',width:1},
        symbol:'none',areaStyle:{color:'rgba(14,124,102,.10)'},tooltip:{show:false},silent:true},
-      {name:'μ−2σ',type:'line',data:[null,...dn],lineStyle:{color:'rgba(14,124,102,.35)',width:1},
+      {name:'μ−2σ',type:'line',data:[...Array(hist.length).fill(null),...dn],lineStyle:{color:'rgba(14,124,102,.35)',width:1},
        symbol:'none',tooltip:{show:false},silent:true}
     ]
   },{notMerge:true});
@@ -892,7 +892,7 @@ window.addEventListener('resize',()=>chart&&chart.resize());
 /* ══════════════ 对话浮窗(mock,待接百炼 API) ══════════════ */
 const chatLog=$('chat-log');
 function pushMsg(txt,who){const m=document.createElement('div');m.className='msg '+who;
-  m.textContent=txt;chatLog.appendChild(m);chatLog.scrollTop=chatLog.scrollHeight;}
+  m.textContent=txt;chatLog.appendChild(m);chatLog.scrollTop=chatLog.scrollHeight;return m;}
 function botAnswer(q){
   const s=STORES[curStore];
   if(q.includes('PRODUCE')){const c=s.cats.find(x=>x.cat==='PRODUCE'),r=calcSugg(c);
@@ -949,12 +949,25 @@ async function send(){
   const thinking = pushMsg('…', 'bot');
   try {
     const a = await llmChat(v);
-    thinking.remove();
+    if (thinking) thinking.remove();
     pushMsg(a ? a + '\n(百炼 Qwen · 数字锚定)' : botAnswer(v), 'bot');
   } catch (e) {
-    thinking.remove();
+    if (thinking) thinking.remove();
     pushMsg('LLM 调用失败(' + e.message + '),以下为本地规则版回答:\n' + botAnswer(v), 'bot');
   }
+}
+/* 自动化测试钩子: #chattest → 自动发消息并把最后一条回复写入 title */
+if (location.hash === '#chattest') {
+  setTimeout(async () => {
+    try {
+      $('chat-in').value = '一句话:本周卖得怎么样?';
+      await send();
+      setTimeout(() => {
+        const msgs = document.querySelectorAll('#chat-log .msg');
+        document.title = 'CHATTEST|' + (msgs.length ? msgs[msgs.length - 1].textContent.slice(0, 120) : 'EMPTY');
+      }, 1500);
+    } catch (e) { document.title = 'CHATTEST|ERR:' + e.message; }
+  }, 800);
 }
 
 /* ══════════════ 弹层通用 ══════════════ */
@@ -1244,7 +1257,7 @@ renderAll();
 const h0 = location.hash.slice(1);
 if (h0 && $('view-' + h0)) { const b = tabs.querySelector('[data-v="' + h0 + '"]'); if (b) b.click(); }
 pushMsg('你好,霖哥 👋 我是选品助手。可问:「为什么 PRODUCE 建议订这么多?」「哪些品类缺货风险最高?」','bot');
-pushMsg('点击右上「key」配置百炼 API key 后即可直连 Qwen 问答(key 只存本机 localStorage,不写入交付物);未配置时为本地规则版回答。','bot');
+pushMsg('key 已从本地 llm_key.js 自动加载,可直接提问;若该文件不存在,点击右上「设置key」手动录入(存 localStorage)。','bot');
 </script>
 </body>
 </html>
