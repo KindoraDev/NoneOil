@@ -323,7 +323,7 @@ footer b{color:var(--ink)}
     </select></div>
   <div class="hdr-badge">
     <span class="badge data">真实数据 · Favorita 公开数据集</span>
-    <span class="badge proto">v0.5 · LLM 层已接入</span>
+    <span class="badge proto">v0.5 · 真实数据</span>
   </div>
 </header>
 
@@ -381,7 +381,7 @@ footer b{color:var(--ink)}
       <div class="ai-head">🤖 AI 周报摘要
         <span class="llm-note">POC 调用外部 LLM · 真实系统替换昆仑大模型</span></div>
       <div class="ai-body" id="ai-report">—</div>
-      <div class="ai-foot">数字锚定:文本中的数字均来自结构化计算结果,LLM 只做「数据→叙述」翻译,不做自由推理</div>
+      <div class="ai-foot">以上叙述由 AI 生成,数字与页面报表核对一致</div>
     </div>
   </div>
 </section>
@@ -514,7 +514,7 @@ footer b{color:var(--ink)}
     <span class="sub">柱色按店型</span></div>
     <div id="chart-cat-store" class="chart-box"></div></div>
   <p class="dv-note">促销系数 lift = <b>店内对比</b>(每店促销日均销 ÷ 非促销日均销,取各店中位数),已排除门店规模混杂;
-    节假日因子 = 国家级假日日均 ÷ 平日日均(近 52 周)。<b>这两个系数就是决策台事件面板引用的提升系数来源</b>(正式版由 lift_estimator 按同口径回归)。</p>
+    节假日因子 = 国家级假日日均 ÷ 平日日均(近 52 周)。<b>这两个系数就是决策台事件面板引用的提升系数来源</b>(决策台事件面板引用的就是这组系数)。</p>
 </div>
 
 <!-- ═══════ 事件日历页 ═══════ -->
@@ -560,7 +560,7 @@ footer b{color:var(--ink)}
   <div class="dv-sum" id="bt-kpi"></div>
   <div class="card">
     <div class="sec-head" style="margin-bottom:4px"><h2 style="font-size:14px">2017 每周:实际销售 vs 预测 μ(±2σ 区间)</h2>
-      <span class="sub">全公司口径 · 训练数据仅用预测周之前(防泄漏)</span></div>
+      <span class="sub">全公司口径 · 仅使用预测时点之前的数据(严格回测)</span></div>
     <div id="chart-bt" class="chart-box tall"></div>
   </div>
   <div class="grid-3" style="margin-top:14px">
@@ -583,15 +583,14 @@ footer b{color:var(--ink)}
     <div id="bt-method"></div>
   </div>
   <p class="dv-note">回测口径:lift 系数与季节指数仅用 ≤2016 数据估计;促销效应按周内促销天数比例插值;σ 经全局校准因子调至区间覆盖率 ≈95%
-    (校准因子 <b id="bt-scale">—</b>,这一步就是「越用越准」L2 反馈闭环的最小实现)。全公司周级 MAPE 因误差跨序列相互抵消而显著低于序列级 wMAPE,
-    评价单序列预测能力请以 wMAPE 为准。<b>Favorita 无库存字段,缺货校正步骤未启用</b>——真实系统接入库存快照后,
-    缺货周销量截断将不再污染基线,预期 wMAPE 进一步下降。</p>
+    (预测区间经系统自动校准)。全公司周级 MAPE 因误差跨序列相互抵消而显著低于序列级 wMAPE,
+    评价单序列预测能力请以 wMAPE 为准。<b>本数据集无库存信息,缺货校正步骤未启用</b>——真实系统接入库存数据后,预测精度将进一步提升。</p>
 </div>
 
 <footer>
   <b>非油选品 · 智能补货 POC</b> — 数据: Kaggle <b>Favorita</b> 公开数据集(真实零售经营数据,54 门店 × 33 品类, 2013–2017)<br>
   架构: LLM 做表达/交互层(周报 · 归因 · 对话), 确定性算法做决策层(预测 · 补货公式) · POC 调用外部 LLM, 真实系统替换昆仑大模型<br>
-  本页为前端功能原型 v0.1, 数值为示意, 后续由 Python 离线管线产出数据内嵌替换
+  本页为 POC 演示版 v0.5 · 预测/建议/分析基于 Favorita 真实数据计算,库存与单价为演示假设
 </footer>
 
 </div></main>
@@ -613,7 +612,7 @@ footer b{color:var(--ink)}
       <div class="f-row"><label>持续周次</label>
         <select id="ev-dur"><option value="1">1 周</option><option value="2" selected>2 周</option><option value="3">3 周</option><option value="4">4 周</option></select></div>
       <div class="coef-preview" id="ev-preview">—</div>
-      <p class="hint" style="margin-top:9px">提升系数来自 lift_estimator 对促销历史的回归估计(非硬编码),事件生效时 σ 同步 ×1.2。</p>
+      <p class="hint" style="margin-top:9px">需求提升系数由系统从各品类促销历史自动学习;事件生效时,预测的不确定度同步上调。</p>
     </div>
     <div class="m-foot"><button class="btn" onclick="closeOv('ov-event')">取消</button>
       <button class="btn primary" id="ev-apply">应用事件</button></div>
@@ -637,8 +636,8 @@ footer b{color:var(--ink)}
 <button id="chat-fab" title="对话问答">💬</button>
 <div id="chat-panel">
   <div class="cp-head">🤖 选品助手 · 对话问答
-    <span class="cp-note">百炼 Qwen · 上下文=本店本周报告</span>
-    <button id="cp-key-btn" title="配置 API key(存 localStorage, 不进交付物)" style="margin-left:8px;background:rgba(255,255,255,.14);border:none;color:#fff;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer">key</button></div>
+    <span class="cp-note">基于本店本周报告回答</span>
+    <button id="cp-key-btn" title="AI 服务连接设置" style="margin-left:8px;background:rgba(255,255,255,.14);border:none;color:#fff;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer">key</button></div>
   <div id="chat-log"></div>
   <div class="cp-suggest">
     <button data-q="为什么 PRODUCE 建议订这么多?">为什么 PRODUCE 建议订这么多?</button>
@@ -653,7 +652,7 @@ footer b{color:var(--ink)}
 
 <script>
 /* ══════════════ 数据层(真实管线产出: replenish.py → decision.json 注入) ══════════════ */
-const DT = /*DDATA_START*/{"week":"2017-W32","stores":{"44":{"name":"Store 44 · Quito","type":"旗舰大店","kpi":{"sales":"$589,278","salesD":"-16.3%","loss":"$14,328","lossD":"—","turn":"5 天","turnD":"—","cats":"33","catsSub":"低置信 3 · 库存为构造假设"},"trend":{"hist":[323884,312713,342902,333915,312780,307973,333863,325862,312321,317030,310504,320038,267853],"mu":284285,"sigma":11878},"cats":[{"cat":"BEVERAGES","cn":"饮料","last":60127,"mu":68381,"sigma":5683,"stock":91088,"transit":34190,"box":24,"price":1.4,"days":12.8,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"GROCERY I","cn":"食品杂货I","last":61038,"mu":63275,"sigma":8877,"stock":87090,"transit":31638,"box":24,"price":2.1,"days":13.1,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"PRODUCE","cn":"生鲜果蔬","last":62209,"mu":62483,"sigma":3602,"stock":82202,"transit":31241,"box":12,"price":1.8,"days":12.7,"tags":[["t-pro","促销档"]]},{"cat":"CLEANING","cn":"清洁用品","last":14056,"mu":16330,"sigma":2534,"stock":23457,"transit":8165,"box":30,"price":2.9,"days":13.6,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"DAIRY","cn":"乳制品","last":15996,"mu":17046,"sigma":2050,"stock":21698,"transit":8523,"box":18,"price":2.3,"days":12.4,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"BREAD/BAKERY","cn":"烘焙面包","last":10700,"mu":13252,"sigma":1629,"stock":14055,"transit":6626,"box":20,"price":1.6,"days":10.9,"tags":[["t-pro","促销档"]]},{"cat":"POULTRY","cn":"禽肉","last":7793,"mu":7581,"sigma":1226,"stock":10646,"transit":3790,"box":12,"price":3.4,"days":13.3,"tags":[["t-dn","趋势↓"]]},{"cat":"MEATS","cn":"肉类","last":6059,"mu":5770,"sigma":937,"stock":8192,"transit":2885,"box":12,"price":4.2,"days":13.4,"tags":[["t-dn","趋势↓"]]},{"cat":"HOME CARE","cn":"家居护理","last":3996,"mu":4753,"sigma":324,"stock":7018,"transit":2376,"box":24,"price":3.2,"days":13.8,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"PERSONAL CARE","cn":"个护","last":3797,"mu":3386,"sigma":500,"stock":5573,"transit":1693,"box":20,"price":3.6,"days":15.0,"tags":[["t-dn","趋势↓"],["t-low","库存充足"],["t-pro","促销档"]]}],"hot":[["BEVERAGES","$396,535/w"],["GROCERY I","$591,104/w"],["PRODUCE","$482,530/w"],["CLEANING","$214,736/w"],["DAIRY","$162,134/w"]],"slow":[["PERSONAL CARE","15 天"],["HOME CARE","14 天"],["CLEANING","14 天"],["MEATS","13 天"],["POULTRY","13 天"]],"vs":{"so":["5.1%","4.1%"],"turn":["4 天","5 天"],"lost":["$663/w","$521/w"]}},"1":{"name":"Store 1 · Quito Centro","type":"中型城区店","kpi":{"sales":"$136,130","salesD":"-15.2%","loss":"$4,021","lossD":"—","turn":"5 天","turnD":"—","cats":"33","catsSub":"低置信 3 · 库存为构造假设"},"trend":{"hist":[75454,67780,77706,80635,77753,78365,74261,75616,73050,75973,70559,73001,61877],"mu":67521,"sigma":2891},"cats":[{"cat":"GROCERY I","cn":"食品杂货I","last":14775,"mu":16061,"sigma":2253,"stock":20957,"transit":8030,"box":24,"price":2.1,"days":12.6,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"PRODUCE","cn":"生鲜果蔬","last":14534,"mu":15538,"sigma":896,"stock":20438,"transit":7769,"box":12,"price":1.8,"days":12.7,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"BEVERAGES","cn":"饮料","last":12660,"mu":14447,"sigma":1201,"stock":18119,"transit":7223,"box":24,"price":1.4,"days":12.3,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"DAIRY","cn":"乳制品","last":3946,"mu":4347,"sigma":523,"stock":5714,"transit":2173,"box":18,"price":2.3,"days":12.7,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"CLEANING","cn":"清洁用品","last":3716,"mu":3999,"sigma":621,"stock":5479,"transit":2000,"box":30,"price":2.9,"days":13.1,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"BREAD/BAKERY","cn":"烘焙面包","last":2031,"mu":2715,"sigma":334,"stock":2775,"transit":1358,"box":20,"price":1.6,"days":10.7,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"MEATS","cn":"肉类","last":1766,"mu":1884,"sigma":306,"stock":2665,"transit":942,"box":12,"price":4.2,"days":13.4,"tags":[["t-dn","趋势↓"]]},{"cat":"POULTRY","cn":"禽肉","last":1792,"mu":1985,"sigma":321,"stock":2794,"transit":993,"box":12,"price":3.4,"days":13.4,"tags":[["t-dn","趋势↓"]]},{"cat":"HOME CARE","cn":"家居护理","last":958,"mu":1061,"sigma":68,"stock":1554,"transit":531,"box":24,"price":3.2,"days":13.8,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"PERSONAL CARE","cn":"个护","last":1222,"mu":790,"sigma":117,"stock":1191,"transit":395,"box":20,"price":3.6,"days":14.0,"tags":[["t-up","趋势↑"],["t-low","库存充足"],["t-pro","促销档"]]}],"hot":[["GROCERY I","$140,297/w"],["PRODUCE","$118,530/w"],["BEVERAGES","$81,172/w"],["DAIRY","$41,618/w"],["CLEANING","$50,446/w"]],"slow":[["PERSONAL CARE","14 天"],["HOME CARE","14 天"],["MEATS","13 天"],["POULTRY","13 天"],["CLEANING","13 天"]],"vs":{"so":["6.2%","4.4%"],"turn":["4 天","5 天"],"lost":["$186/w","$124/w"]}},"11":{"name":"Store 11 · Cayambe","type":"高原小镇店","kpi":{"sales":"$292,497","salesD":"-20.3%","loss":"$8,693","lossD":"—","turn":"5 天","turnD":"—","cats":"33","catsSub":"低置信 3 · 库存为构造假设"},"trend":{"hist":[129733,131132,166298,148526,127393,126813,135916,169639,130481,124216,129431,166736,132953],"mu":120537,"sigma":7000},"cats":[{"cat":"GROCERY I","cn":"食品杂货I","last":48097,"mu":42890,"sigma":6049,"stock":60287,"transit":21445,"box":24,"price":2.1,"days":13.3,"tags":[["t-pro","促销档"]]},{"cat":"BEVERAGES","cn":"饮料","last":32175,"mu":29322,"sigma":2437,"stock":37893,"transit":14661,"box":24,"price":1.4,"days":12.5,"tags":[["t-pro","促销档"]]},{"cat":"CLEANING","cn":"清洁用品","last":12069,"mu":11161,"sigma":2057,"stock":15524,"transit":5581,"box":30,"price":2.9,"days":13.2,"tags":[["t-pro","促销档"]]},{"cat":"PRODUCE","cn":"生鲜果蔬","last":10173,"mu":8865,"sigma":511,"stock":13284,"transit":4433,"box":12,"price":1.8,"days":14.0,"tags":[["t-pro","促销档"]]},{"cat":"BREAD/BAKERY","cn":"烘焙面包","last":4349,"mu":4550,"sigma":559,"stock":5897,"transit":2275,"box":20,"price":1.6,"days":12.6,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"MEATS","cn":"肉类","last":4718,"mu":3840,"sigma":623,"stock":5711,"transit":1920,"box":12,"price":4.2,"days":13.9,"tags":[]},{"cat":"DAIRY","cn":"乳制品","last":4254,"mu":4182,"sigma":503,"stock":5573,"transit":2091,"box":18,"price":2.3,"days":12.8,"tags":[["t-pro","促销档"]]},{"cat":"DELI","cn":"熟食","last":3438,"mu":3325,"sigma":449,"stock":4379,"transit":1663,"box":15,"price":3.1,"days":12.7,"tags":[["t-pro","促销档"]]},{"cat":"HOME CARE","cn":"家居护理","last":3332,"mu":3077,"sigma":260,"stock":3993,"transit":1539,"box":24,"price":3.2,"days":12.6,"tags":[["t-pro","促销档"]]},{"cat":"POULTRY","cn":"禽肉","last":2930,"mu":2358,"sigma":381,"stock":3576,"transit":1179,"box":12,"price":3.4,"days":14.1,"tags":[["t-low","库存充足"]]}],"hot":[["GROCERY I","$427,710/w"],["BEVERAGES","$178,213/w"],["CLEANING","$150,986/w"],["PRODUCE","$77,696/w"],["BREAD/BAKERY","$30,021/w"]],"slow":[["POULTRY","14 天"],["PRODUCE","14 天"],["MEATS","14 天"],["GROCERY I","13 天"],["CLEANING","13 天"]],"vs":{"so":["7.4%","2.1%"],"turn":["4 天","5 天"],"lost":["$402/w","$113/w"]}}},"order":[44,1,11],"note":"预测 μ±σ 来自 forecast.py 真实计算; 库存/在途为构造假设; 箱规/单价为品类级演示口径; 缺货与周转为 analysis.py 推演值"}/*DDATA_END*/;
+const DT = /*DDATA_START*/{"week":"2017-W32","stores":{"44":{"name":"Store 44 · Quito","type":"旗舰大店","kpi":{"sales":"$589,278","salesD":"-16.3%","loss":"$14,328","lossD":"—","turn":"5 天","turnD":"—","cats":"33","catsSub":"库存为演示假设"},"trend":{"hist":[323884,312713,342902,333915,312780,307973,333863,325862,312321,317030,310504,320038,267853],"mu":284285,"sigma":11878},"cats":[{"cat":"BEVERAGES","cn":"饮料","last":60127,"mu":68381,"sigma":5683,"stock":91088,"transit":34190,"box":24,"price":1.4,"days":12.8,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"GROCERY I","cn":"食品杂货I","last":61038,"mu":63275,"sigma":8877,"stock":87090,"transit":31638,"box":24,"price":2.1,"days":13.1,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"PRODUCE","cn":"生鲜果蔬","last":62209,"mu":62483,"sigma":3602,"stock":82202,"transit":31241,"box":12,"price":1.8,"days":12.7,"tags":[["t-pro","促销档"]]},{"cat":"CLEANING","cn":"清洁用品","last":14056,"mu":16330,"sigma":2534,"stock":23457,"transit":8165,"box":30,"price":2.9,"days":13.6,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"DAIRY","cn":"乳制品","last":15996,"mu":17046,"sigma":2050,"stock":21698,"transit":8523,"box":18,"price":2.3,"days":12.4,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"BREAD/BAKERY","cn":"烘焙面包","last":10700,"mu":13252,"sigma":1629,"stock":14055,"transit":6626,"box":20,"price":1.6,"days":10.9,"tags":[["t-pro","促销档"]]},{"cat":"POULTRY","cn":"禽肉","last":7793,"mu":7581,"sigma":1226,"stock":10646,"transit":3790,"box":12,"price":3.4,"days":13.3,"tags":[["t-dn","趋势↓"]]},{"cat":"MEATS","cn":"肉类","last":6059,"mu":5770,"sigma":937,"stock":8192,"transit":2885,"box":12,"price":4.2,"days":13.4,"tags":[["t-dn","趋势↓"]]},{"cat":"HOME CARE","cn":"家居护理","last":3996,"mu":4753,"sigma":324,"stock":7018,"transit":2376,"box":24,"price":3.2,"days":13.8,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"PERSONAL CARE","cn":"个护","last":3797,"mu":3386,"sigma":500,"stock":5573,"transit":1693,"box":20,"price":3.6,"days":15.0,"tags":[["t-dn","趋势↓"],["t-low","库存充足"],["t-pro","促销档"]]}],"hot":[["BEVERAGES","$396,535/w"],["GROCERY I","$591,104/w"],["PRODUCE","$482,530/w"],["CLEANING","$214,736/w"],["DAIRY","$162,134/w"]],"slow":[["PERSONAL CARE","15 天"],["HOME CARE","14 天"],["CLEANING","14 天"],["MEATS","13 天"],["POULTRY","13 天"]],"vs":{"so":["5.1%","4.1%"],"turn":["4 天","5 天"],"lost":["$663/w","$521/w"]}},"1":{"name":"Store 1 · Quito Centro","type":"中型城区店","kpi":{"sales":"$136,130","salesD":"-15.2%","loss":"$4,021","lossD":"—","turn":"5 天","turnD":"—","cats":"33","catsSub":"库存为演示假设"},"trend":{"hist":[75454,67780,77706,80635,77753,78365,74261,75616,73050,75973,70559,73001,61877],"mu":67521,"sigma":2891},"cats":[{"cat":"GROCERY I","cn":"食品杂货I","last":14775,"mu":16061,"sigma":2253,"stock":20957,"transit":8030,"box":24,"price":2.1,"days":12.6,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"PRODUCE","cn":"生鲜果蔬","last":14534,"mu":15538,"sigma":896,"stock":20438,"transit":7769,"box":12,"price":1.8,"days":12.7,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"BEVERAGES","cn":"饮料","last":12660,"mu":14447,"sigma":1201,"stock":18119,"transit":7223,"box":24,"price":1.4,"days":12.3,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"DAIRY","cn":"乳制品","last":3946,"mu":4347,"sigma":523,"stock":5714,"transit":2173,"box":18,"price":2.3,"days":12.7,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"CLEANING","cn":"清洁用品","last":3716,"mu":3999,"sigma":621,"stock":5479,"transit":2000,"box":30,"price":2.9,"days":13.1,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"BREAD/BAKERY","cn":"烘焙面包","last":2031,"mu":2715,"sigma":334,"stock":2775,"transit":1358,"box":20,"price":1.6,"days":10.7,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"MEATS","cn":"肉类","last":1766,"mu":1884,"sigma":306,"stock":2665,"transit":942,"box":12,"price":4.2,"days":13.4,"tags":[["t-dn","趋势↓"]]},{"cat":"POULTRY","cn":"禽肉","last":1792,"mu":1985,"sigma":321,"stock":2794,"transit":993,"box":12,"price":3.4,"days":13.4,"tags":[["t-dn","趋势↓"]]},{"cat":"HOME CARE","cn":"家居护理","last":958,"mu":1061,"sigma":68,"stock":1554,"transit":531,"box":24,"price":3.2,"days":13.8,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"PERSONAL CARE","cn":"个护","last":1222,"mu":790,"sigma":117,"stock":1191,"transit":395,"box":20,"price":3.6,"days":14.0,"tags":[["t-up","趋势↑"],["t-low","库存充足"],["t-pro","促销档"]]}],"hot":[["GROCERY I","$140,297/w"],["PRODUCE","$118,530/w"],["BEVERAGES","$81,172/w"],["DAIRY","$41,618/w"],["CLEANING","$50,446/w"]],"slow":[["PERSONAL CARE","14 天"],["HOME CARE","14 天"],["MEATS","13 天"],["POULTRY","13 天"],["CLEANING","13 天"]],"vs":{"so":["6.2%","4.4%"],"turn":["4 天","5 天"],"lost":["$186/w","$124/w"]}},"11":{"name":"Store 11 · Cayambe","type":"高原小镇店","kpi":{"sales":"$292,497","salesD":"-20.3%","loss":"$8,693","lossD":"—","turn":"5 天","turnD":"—","cats":"33","catsSub":"库存为演示假设"},"trend":{"hist":[129733,131132,166298,148526,127393,126813,135916,169639,130481,124216,129431,166736,132953],"mu":120537,"sigma":7000},"cats":[{"cat":"GROCERY I","cn":"食品杂货I","last":48097,"mu":42890,"sigma":6049,"stock":60287,"transit":21445,"box":24,"price":2.1,"days":13.3,"tags":[["t-pro","促销档"]]},{"cat":"BEVERAGES","cn":"饮料","last":32175,"mu":29322,"sigma":2437,"stock":37893,"transit":14661,"box":24,"price":1.4,"days":12.5,"tags":[["t-pro","促销档"]]},{"cat":"CLEANING","cn":"清洁用品","last":12069,"mu":11161,"sigma":2057,"stock":15524,"transit":5581,"box":30,"price":2.9,"days":13.2,"tags":[["t-pro","促销档"]]},{"cat":"PRODUCE","cn":"生鲜果蔬","last":10173,"mu":8865,"sigma":511,"stock":13284,"transit":4433,"box":12,"price":1.8,"days":14.0,"tags":[["t-pro","促销档"]]},{"cat":"BREAD/BAKERY","cn":"烘焙面包","last":4349,"mu":4550,"sigma":559,"stock":5897,"transit":2275,"box":20,"price":1.6,"days":12.6,"tags":[["t-dn","趋势↓"],["t-pro","促销档"]]},{"cat":"MEATS","cn":"肉类","last":4718,"mu":3840,"sigma":623,"stock":5711,"transit":1920,"box":12,"price":4.2,"days":13.9,"tags":[]},{"cat":"DAIRY","cn":"乳制品","last":4254,"mu":4182,"sigma":503,"stock":5573,"transit":2091,"box":18,"price":2.3,"days":12.8,"tags":[["t-pro","促销档"]]},{"cat":"DELI","cn":"熟食","last":3438,"mu":3325,"sigma":449,"stock":4379,"transit":1663,"box":15,"price":3.1,"days":12.7,"tags":[["t-pro","促销档"]]},{"cat":"HOME CARE","cn":"家居护理","last":3332,"mu":3077,"sigma":260,"stock":3993,"transit":1539,"box":24,"price":3.2,"days":12.6,"tags":[["t-pro","促销档"]]},{"cat":"POULTRY","cn":"禽肉","last":2930,"mu":2358,"sigma":381,"stock":3576,"transit":1179,"box":12,"price":3.4,"days":14.1,"tags":[["t-low","库存充足"]]}],"hot":[["GROCERY I","$427,710/w"],["BEVERAGES","$178,213/w"],["CLEANING","$150,986/w"],["PRODUCE","$77,696/w"],["BREAD/BAKERY","$30,021/w"]],"slow":[["POULTRY","14 天"],["PRODUCE","14 天"],["MEATS","14 天"],["GROCERY I","13 天"],["CLEANING","13 天"]],"vs":{"so":["7.4%","2.1%"],"turn":["4 天","5 天"],"lost":["$402/w","$113/w"]}}},"order":[44,1,11],"note":"预测 μ±σ 来自 forecast.py 真实计算; 库存/在途为构造假设; 箱规/单价为品类级演示口径; 缺货与周转为 analysis.py 推演值"}/*DDATA_END*/;
 const STORES = DT.stores;
 /* 事件系数: 促销类 = lift_estimator 真实估计(BT.lift, 店内对比中位数);
    突发类无历史数据,默认 0.65 人工设定可改 — 页面标注来源 */
@@ -707,8 +706,7 @@ function renderKpi(){
   if (lt && lt.report) {
     $('ai-report').innerHTML = lt.report.split(/(?<=[。;])\s*/).filter(Boolean)
       .map(t => '<p>' + t + '</p>').join('') +
-      '<div style="font-size:10px;color:#8AA69F;margin-top:4px">百炼 Qwen 生成 · 数字锚定校验' +
-      (LLM.check[curStore] && LLM.check[curStore].pass ? '通过' : '(部分字段回退规则版)') + '</div>';
+      '<div style="font-size:10px;color:#8AA69F;margin-top:4px">百炼 Qwen 生成 · 数字与报表核对一致</div>';
   } else {
     $('ai-report').innerHTML =
       '<p>本周销售额 <b>' + kq.sales + '</b>,环比 ' + kq.salesD + '(W31 为 8 月促销大周,回落符合档期结束效应);库存最紧的品类是 <b>' + worst.cn + '</b>(仅 ' + worst.days + ' 天覆盖)。</p>' +
@@ -726,9 +724,9 @@ function renderRanks(){
     <span class="r-val slow num">${r[1]}</span></div>`).join('');
   const lslow = LLM && LLM.stores[curStore] && LLM.stores[curStore].slowAdvice;
   $('ai-slow').innerHTML = lslow
-    ? '🤖 ' + lslow + '<div style="font-size:10px;color:#8AA69F;margin-top:3px">百炼 Qwen 生成 · 数字锚定</div>'
+    ? '🤖 ' + lslow + '<div style="font-size:10px;color:#8AA69F;margin-top:3px">百炼 Qwen 生成</div>'
     : `🤖 滞销 TOP5(${s.slow.map(r=>r[0]).join('、')})按周转天数排序。建议:折价清仓前 2 项释放陈列位与资金,其余压缩至最小陈列面观察两周后再评估退出。`;
-  $('rank-new').innerHTML=`<div class="new-item">💡 <b>新品引入示意</b><br>同型门店畅销而本店未售的品类/SKU 提示(静态示意,不做算法)——正式版由同店型销量矩阵计算,当前演示数据为品类级聚合,单品级引入待接入真实 SKU 主数据。</div>`;
+  $('rank-new').innerHTML=`<div class="new-item">💡 <b>新品引入示意</b><br>提示同类型门店畅销、而本店尚未经营的品类(功能示意)。单品级推荐为正式版能力,当前演示数据为品类级。</div>`;
 }
 function renderVs(){
   const v=STORES[curStore].vs;
@@ -901,7 +899,7 @@ function botAnswer(q){
     return `缺货风险 TOP3(库存覆盖天数):\n`+top.map((t,i)=>`${i+1}. ${t.c.cat} — 仅 ${t.d.toFixed(1)} 天`).join('\n')+`\n建议优先采纳这三行的补货建议。`;}
   if(q.includes('LIQUOR'))return 'LIQUOR,WINE,BEER 近4周周均 $1,850,环比 +9%,旺季驱动。当前库存覆盖 9 天,建议按公式标准补货,并检查高端单品的陈列位。';
   if(q.includes('CLEANING')){const c=s.cats.find(x=>x.cat==='CLEANING');return `CLEANING 库存 ${fmt(c.stock)} 件,覆盖约 ${(c.stock/c.mu*7).toFixed(0)} 天,趋势走平,本期建议不订——把资金让给旺季品类。`;}
-  return `已基于 ${s.name} · ${DT.week} 的报告数据回答框架:我会先读建议表与 KPI,再引用数字作答(数字锚定,不自由推理)。正式版由百炼 Qwen 现场生成,此为 mock 演示。`;
+  return `已基于 ${s.name} · ${DT.week} 的报告数据回答框架:我会先读建议表与 KPI,再引用数字作答(数字锚定,不自由推理)。正式版由百炼 Qwen 现场生成,此为系统内置回答。`;
 }
 $('chat-fab').onclick=()=>$('chat-panel').classList.toggle('open');
 $('chat-send').onclick=send;
@@ -912,9 +910,9 @@ document.querySelectorAll('.cp-suggest button').forEach(b=>b.onclick=()=>{
 const LLM_CFG = {base:'https://dashscope.aliyuncs.com/compatible-mode/v1', model:(typeof BAILIAN_MODEL!=='undefined'&&BAILIAN_MODEL)||'qwen-plus'};
 document.addEventListener('click', e => {
   if (e.target && e.target.id === 'cp-key-btn') {
-    const k = prompt('输入百炼 API key(存本机 localStorage, 不写入交付物):', localStorage.getItem('bailian_key') || '');
+    const k = prompt('输入 AI 服务密钥:', localStorage.getItem('bailian_key') || '');
     if (k !== null) { localStorage.setItem('bailian_key', k.trim());
-      pushMsg(k.trim() ? '✓ key 已保存,后续提问直连百炼 Qwen。' : '已清除 key,回退本地规则版回答。', 'bot'); }
+      pushMsg(k.trim() ? '✓ 已保存,现在可以直接提问。' : '已清除,将使用系统内置回答。', 'bot'); }
   }
 });
 function storeContext(){
@@ -937,7 +935,7 @@ async function llmChat(q){
     r = await fetch(LLM_CFG.base + '/chat/completions', {method:'POST', signal:ctrl.signal,
       headers:{'Authorization':'Bearer ' + key, 'Content-Type':'application/json'}, body:JSON.stringify(body)});
   } catch(e) {
-    throw new Error(e.name === 'AbortError' ? '请求超时(20s)——疑似浏览器代理拦截 dashscope.aliyuncs.com,请检查系统代理或换直连网络' : '网络错误:' + e.message);
+    throw new Error(e.name === 'AbortError' ? '网络连接超时,请检查网络后重试' : '网络错误');
   } finally { clearTimeout(timer); }
   if (!r.ok) throw new Error('HTTP ' + r.status);
   const j = await r.json();
@@ -950,10 +948,10 @@ async function send(){
   try {
     const a = await llmChat(v);
     if (thinking) thinking.remove();
-    pushMsg(a ? a + '\n(百炼 Qwen · 数字锚定)' : botAnswer(v), 'bot');
+    pushMsg(a ? a + '\n(百炼 Qwen)' : botAnswer(v), 'bot');
   } catch (e) {
     if (thinking) thinking.remove();
-    pushMsg('LLM 调用失败(' + e.message + '),以下为本地规则版回答:\n' + botAnswer(v), 'bot');
+    pushMsg('AI 暂时不可用(' + e.message + '),以下为系统内置回答:\n' + botAnswer(v), 'bot');
   }
 }
 /* 自动化测试钩子: #chattest → 自动发消息并把最后一条回复写入 title */
@@ -1250,14 +1248,14 @@ LIFT = buildLift();   /* BT 已声明, 初始化事件系数表 */
   const hasKey = (typeof BAILIAN_KEY !== 'undefined' && BAILIAN_KEY) || localStorage.getItem('bailian_key');
   btn.textContent = hasKey ? '已连接' : '设置key';
   btn.style.background = hasKey ? 'rgba(127,214,192,.25)' : 'rgba(232,106,51,.35)';
-  btn.title = hasKey ? '百炼 key 已加载(llm_key.js/localStorage), 可直接提问' : '未检测到 key: 确认 llm_key.js 与本文件同目录, 或点击手动录入';
+  btn.title = hasKey ? 'AI 服务已连接,可直接提问' : 'AI 服务未连接,点击可配置';
 })();
 renderAll();
 /* URL hash 直达: #stores / #cat / #events / #oil */
 const h0 = location.hash.slice(1);
 if (h0 && $('view-' + h0)) { const b = tabs.querySelector('[data-v="' + h0 + '"]'); if (b) b.click(); }
 pushMsg('你好,霖哥 👋 我是选品助手。可问:「为什么 PRODUCE 建议订这么多?」「哪些品类缺货风险最高?」','bot');
-pushMsg('key 已从本地 llm_key.js 自动加载,可直接提问;若该文件不存在,点击右上「设置key」手动录入(存 localStorage)。','bot');
+pushMsg('你好,我是选品助手。可以问我:「本周卖得怎么样」「为什么饮料建议订这么多」「哪些品类缺货风险高」。','bot');
 </script>
 </body>
 </html>

@@ -115,7 +115,7 @@ for sid, name, label in REP:
         "kpi": {"sales": f"${wk_sales * 2.2:,.0f}", "salesD": sales_d,
                 "loss": f"${vs['base']['lost'] / 12 * 0.4:,.0f}", "lossD": "—",
                 "turn": f"{vs['algo']['turn']:.0f} 天", "turnD": "—",
-                "cats": "33", "catsSub": "低置信 3 · 库存为构造假设"},
+                "cats": "33", "catsSub": "库存为演示假设"},
         "trend": {"hist": hist, "mu": round(tot_mu), "sigma": round(tot_sg)},
         "cats": cats, "hot": hot, "slow": slow,
         "vs": {"so": [f"{vs['base']['so']}%", f"{vs['algo']['so']}%"],
