@@ -930,8 +930,15 @@ async function llmChat(q){
     {role:'system', content:'你是门店选品助手。只依据提供的报告 JSON 回答,引用其中的数字,禁止编造数字或推算;数据里没有的就明说。用简体中文,简洁,店长口吻。'},
     {role:'user', content:'报告数据:\n' + storeContext()},
     {role:'user', content:q}], temperature:0.3, max_tokens:400};
-  const r = await fetch(LLM_CFG.base + '/chat/completions', {method:'POST',
-    headers:{'Authorization':'Bearer ' + key, 'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 20000);  /* 20s 超时, 防代理挂起 */
+  let r;
+  try {
+    r = await fetch(LLM_CFG.base + '/chat/completions', {method:'POST', signal:ctrl.signal,
+      headers:{'Authorization':'Bearer ' + key, 'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  } catch(e) {
+    throw new Error(e.name === 'AbortError' ? '请求超时(20s)——疑似浏览器代理拦截 dashscope.aliyuncs.com,请检查系统代理或换直连网络' : '网络错误:' + e.message);
+  } finally { clearTimeout(timer); }
   if (!r.ok) throw new Error('HTTP ' + r.status);
   const j = await r.json();
   return j.choices[0].message.content.trim();
