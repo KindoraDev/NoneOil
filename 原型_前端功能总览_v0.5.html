@@ -1156,7 +1156,6 @@ function renderBt() {
     <div class="cell"><div class="c-label">序列级 wMAPE</div><div class="c-val">${k.wmape}%</div><div class="c-sub">${k.nSeq} 序列(门店×品类) · 诚实口径</div></div>
     <div class="cell"><div class="c-label">区间覆盖率 μ±2σ</div><div class="c-val">${k.cover}%</div><div class="c-sub">目标 ≈95% · σ已校准</div></div>
     <div class="cell"><div class="c-label">系统性偏差 bias</div><div class="c-val">${k.bias > 0 ? '+' : ''}${k.bias}%</div><div class="c-sub">≈0 即无系统性高/低估</div></div>`;
-  $('bt-scale').textContent = '×' + k.sigmaScale;
   const c = BT.curve, xs = c.map(r => r[0]);
   const actual = c.map(r => r[1]), mu = c.map(r => r[2]), sg = c.map(r => r[3]);
   mkChart('chart-bt').setOption({
